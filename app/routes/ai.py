@@ -7,15 +7,10 @@ team sentiment analysis using Google Gemini.
 
 import logging
 
-from flask import Blueprint, request
-
 from app.services import firestore_service, gemini_service
-from app.utils.security import (
-    error_response,
-    rate_limit,
-    success_response,
-    validate_json_content_type,
-)
+from app.utils.security import (error_response, rate_limit, success_response,
+                                validate_json_content_type)
+from flask import Blueprint, request
 
 logger = logging.getLogger(__name__)
 

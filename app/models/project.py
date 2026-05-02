@@ -8,7 +8,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Optional
 
-
 # Valid project statuses
 VALID_STATUSES = ("active", "archived", "completed")
 

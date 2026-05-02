@@ -1,7 +1,7 @@
 """Tests for AI endpoints."""
 
 import json
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 
 def _create_project(client):

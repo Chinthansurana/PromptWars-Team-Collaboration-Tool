@@ -7,9 +7,8 @@ services, and security middleware.
 import logging
 import os
 
-from flask import Flask
-
 from app.config import get_config
+from flask import Flask
 
 
 def create_app(config_name: str | None = None) -> Flask:
@@ -85,10 +84,10 @@ def _register_security_headers(app: Flask) -> None:
 
 def _register_blueprints(app: Flask) -> None:
     """Register all API blueprints."""
+    from app.routes.ai import ai_bp
+    from app.routes.messages import messages_bp
     from app.routes.projects import projects_bp
     from app.routes.tasks import tasks_bp
-    from app.routes.messages import messages_bp
-    from app.routes.ai import ai_bp
     from app.routes.views import views_bp
 
     app.register_blueprint(projects_bp, url_prefix="/api")

@@ -9,7 +9,6 @@ from typing import Optional
 
 import bleach
 
-
 # Maximum field lengths
 MAX_NAME_LENGTH = 200
 MAX_DESCRIPTION_LENGTH = 5000

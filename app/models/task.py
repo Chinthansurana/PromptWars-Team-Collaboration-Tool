@@ -8,7 +8,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Optional
 
-
 # Valid task statuses for Kanban workflow
 VALID_STATUSES = ("todo", "in_progress", "review", "done")
 

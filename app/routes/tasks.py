@@ -6,16 +6,11 @@ including Kanban board operations and status updates.
 
 import logging
 
-from flask import Blueprint, request
-
 from app.services import firestore_service
-from app.utils.security import (
-    error_response,
-    rate_limit,
-    success_response,
-    validate_json_content_type,
-)
+from app.utils.security import (error_response, rate_limit, success_response,
+                                validate_json_content_type)
 from app.utils.validators import validate_task_data
+from flask import Blueprint, request
 
 logger = logging.getLogger(__name__)
 

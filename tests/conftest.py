@@ -1,8 +1,8 @@
 """Shared test fixtures for TeamFlow tests."""
 
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
 from app import create_app
 
 

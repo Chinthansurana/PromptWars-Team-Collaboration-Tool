@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Optional
 
-
 # Message types
 VALID_TYPES = ("chat", "system", "ai")
 

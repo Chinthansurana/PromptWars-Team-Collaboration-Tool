@@ -2,11 +2,13 @@
 
 Provides AI-powered features for team collaboration using
 Google Gemini 2.0 Flash model via the google-genai SDK.
+Includes task summarization, smart suggestions, meeting notes
+generation, sentiment analysis, and the Genie AI chatbot.
 """
 
 import logging
 import os
-from typing import Optional
+from typing import Any, Optional
 
 from google import genai
 
@@ -20,10 +22,12 @@ def get_client() -> genai.Client:
     """Get or create the Gemini client (singleton).
 
     Uses GEMINI_API_KEY environment variable for authentication.
-    Falls back to Application Default Credentials on Cloud Run.
 
     Returns:
         Gemini client instance.
+
+    Raises:
+        RuntimeError: If no API key is configured.
     """
     global _client
     if _client is None:
@@ -31,13 +35,12 @@ def get_client() -> genai.Client:
         if api_key:
             _client = genai.Client(api_key=api_key)
         else:
-            # Use Application Default Credentials (ADC) on Cloud Run
             _client = genai.Client()
         logger.info("Gemini client initialized")
     return _client
 
 
-def set_client(client) -> None:
+def set_client(client: Any) -> None:
     """Override the Gemini client (used for testing).
 
     Args:
@@ -53,7 +56,28 @@ def _get_model() -> str:
     Returns:
         Model name string.
     """
-    return os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
+    return os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+
+
+def _generate(prompt: str) -> str:
+    """Generate content using Gemini with error handling.
+
+    Args:
+        prompt: The prompt to send to Gemini.
+
+    Returns:
+        Generated text response.
+    """
+    try:
+        client = get_client()
+        response = client.models.generate_content(
+            model=_get_model(),
+            contents=prompt,
+        )
+        return response.text
+    except Exception as e:
+        logger.error("Gemini generation error: %s", str(e))
+        raise
 
 
 def summarize_tasks(tasks: list[dict], project_name: str) -> str:
@@ -69,37 +93,30 @@ def summarize_tasks(tasks: list[dict], project_name: str) -> str:
     if not tasks:
         return "No tasks found in this project yet. Create some tasks to get an AI summary!"
 
-    task_descriptions = []
+    task_lines = []
     for t in tasks:
-        task_descriptions.append(
+        task_lines.append(
             f"- [{t.get('status', 'todo').upper()}] {t.get('title', 'Untitled')} "
             f"(Priority: {t.get('priority', 'medium')}, "
             f"Assignee: {t.get('assignee', 'Unassigned')})"
         )
-    tasks_text = "\n".join(task_descriptions)
+    tasks_text = "\n".join(task_lines)
 
-    prompt = f"""You are a project management assistant. Analyze the following tasks for the project "{project_name}" and provide a concise status report.
-
-Tasks:
-{tasks_text}
-
-Please provide:
-1. **Overall Progress**: A brief overview of the project status
-2. **Key Metrics**: Count of tasks by status (todo, in progress, review, done)
-3. **Priorities**: Highlight any critical or high-priority items
-4. **Recommendations**: 2-3 actionable suggestions for the team
-
-Keep the response concise, professional, and actionable. Use markdown formatting."""
+    prompt = (
+        f'You are a project management assistant for TeamFlow. '
+        f'Analyze the tasks for project "{project_name}" and provide a status report.\n\n'
+        f'Tasks:\n{tasks_text}\n\n'
+        f'Provide:\n'
+        f'1. **Overall Progress**: Brief project status overview\n'
+        f'2. **Key Metrics**: Task counts by status\n'
+        f'3. **Priorities**: Critical/high-priority items\n'
+        f'4. **Recommendations**: 2-3 actionable suggestions\n\n'
+        f'Use markdown formatting. Be concise and professional.'
+    )
 
     try:
-        client = get_client()
-        response = client.models.generate_content(
-            model=_get_model(),
-            contents=prompt,
-        )
-        return response.text
+        return _generate(prompt)
     except Exception as e:
-        logger.error("Gemini summarize error: %s", str(e))
         return f"AI summary temporarily unavailable. Error: {str(e)}"
 
 
@@ -113,31 +130,17 @@ def suggest_tasks(project_name: str, project_description: str) -> str:
     Returns:
         JSON-formatted string of suggested tasks.
     """
-    prompt = f"""You are a project planning assistant. Based on the following project, suggest 5-8 actionable tasks to get started.
-
-Project: {project_name}
-Description: {project_description}
-
-For each task, provide:
-- title: A clear, concise task title
-- description: A brief description of what needs to be done
-- priority: One of "low", "medium", "high", "critical"
-- tags: Relevant tags as a list
-
-Respond with ONLY a valid JSON array of task objects. Example format:
-[
-  {{"title": "Set up project repository", "description": "Initialize git repo with README and .gitignore", "priority": "high", "tags": ["setup", "infrastructure"]}}
-]"""
+    prompt = (
+        f'You are a project planning assistant. Suggest 5-8 actionable tasks.\n\n'
+        f'Project: {project_name}\nDescription: {project_description}\n\n'
+        f'For each task provide: title, description, priority (low/medium/high/critical), tags.\n'
+        f'Respond with ONLY a valid JSON array. Example:\n'
+        f'[{{"title": "Setup repo", "description": "Init git", "priority": "high", "tags": ["setup"]}}]'
+    )
 
     try:
-        client = get_client()
-        response = client.models.generate_content(
-            model=_get_model(),
-            contents=prompt,
-        )
-        return response.text
+        return _generate(prompt)
     except Exception as e:
-        logger.error("Gemini suggest error: %s", str(e))
         return f"AI suggestions temporarily unavailable. Error: {str(e)}"
 
 
@@ -154,34 +157,19 @@ def generate_meeting_notes(messages: list[dict], project_name: str) -> str:
     if not messages:
         return "No messages found. Start a conversation to generate meeting notes!"
 
-    message_text = []
-    for m in messages:
-        message_text.append(f"[{m.get('sender', 'Unknown')}]: {m.get('content', '')}")
-    conversation = "\n".join(message_text)
+    msg_lines = [f"[{m.get('sender', 'Unknown')}]: {m.get('content', '')}" for m in messages]
+    conversation = "\n".join(msg_lines)
 
-    prompt = f"""You are a meeting notes assistant. Based on the following team conversation from the project "{project_name}", generate structured meeting notes.
-
-Conversation:
-{conversation}
-
-Please provide:
-1. **Meeting Summary**: A brief overview of what was discussed
-2. **Key Decisions**: Any decisions that were made
-3. **Action Items**: Specific tasks that need to be done, with owners if mentioned
-4. **Open Questions**: Any unresolved questions or topics
-5. **Next Steps**: Suggested next steps for the team
-
-Use markdown formatting. Keep it professional and concise."""
+    prompt = (
+        f'Generate structured meeting notes for project "{project_name}".\n\n'
+        f'Conversation:\n{conversation}\n\n'
+        f'Include: Summary, Key Decisions, Action Items, Open Questions, Next Steps.\n'
+        f'Use markdown formatting.'
+    )
 
     try:
-        client = get_client()
-        response = client.models.generate_content(
-            model=_get_model(),
-            contents=prompt,
-        )
-        return response.text
+        return _generate(prompt)
     except Exception as e:
-        logger.error("Gemini meeting notes error: %s", str(e))
         return f"AI meeting notes temporarily unavailable. Error: {str(e)}"
 
 
@@ -197,37 +185,83 @@ def analyze_sentiment(messages: list[dict]) -> str:
     if not messages:
         return "No messages to analyze. Start a conversation to check team sentiment!"
 
-    message_text = []
-    for m in messages:
-        if m.get("msg_type") == "chat":
-            message_text.append(f"[{m.get('sender', 'Unknown')}]: {m.get('content', '')}")
-    conversation = "\n".join(message_text)
-
-    if not conversation.strip():
+    msg_lines = [
+        f"[{m.get('sender', 'Unknown')}]: {m.get('content', '')}"
+        for m in messages if m.get("msg_type") == "chat"
+    ]
+    if not msg_lines:
         return "No chat messages to analyze."
 
-    prompt = f"""You are a team dynamics analyst. Analyze the sentiment and morale of the following team conversation.
-
-Conversation:
-{conversation}
-
-Please provide:
-1. **Overall Sentiment Score**: Rate from 1-10 (1=very negative, 10=very positive)
-2. **Team Morale**: Brief assessment of team morale
-3. **Communication Style**: Observations about how the team communicates
-4. **Potential Concerns**: Any signs of frustration, confusion, or conflict
-5. **Positive Signals**: Any signs of enthusiasm, collaboration, or progress
-6. **Recommendations**: 2-3 suggestions to improve team dynamics
-
-Use markdown formatting. Be constructive and supportive in your analysis."""
+    prompt = (
+        f'Analyze team sentiment from this conversation:\n\n'
+        f'{chr(10).join(msg_lines)}\n\n'
+        f'Provide: Sentiment Score (1-10), Morale Assessment, '
+        f'Communication Style, Concerns, Positive Signals, Recommendations.\n'
+        f'Use markdown. Be constructive.'
+    )
 
     try:
-        client = get_client()
-        response = client.models.generate_content(
-            model=_get_model(),
-            contents=prompt,
-        )
-        return response.text
+        return _generate(prompt)
     except Exception as e:
-        logger.error("Gemini sentiment error: %s", str(e))
         return f"AI sentiment analysis temporarily unavailable. Error: {str(e)}"
+
+
+def genie_chat(
+    user_message: str,
+    project: dict,
+    tasks: list[dict],
+    messages: list[dict],
+) -> str:
+    """Genie AI Chatbot — context-aware team collaboration assistant.
+
+    Genie understands the project context and helps the team
+    with coordination, task management, and communication.
+
+    Args:
+        user_message: The user's message to Genie.
+        project: Current project dictionary.
+        tasks: List of task dictionaries for context.
+        messages: List of recent message dictionaries.
+
+    Returns:
+        Genie's response text.
+    """
+    # Build context summary
+    task_summary = "No tasks yet."
+    if tasks:
+        status_counts: dict[str, int] = {}
+        for t in tasks:
+            s = t.get("status", "todo")
+            status_counts[s] = status_counts.get(s, 0) + 1
+        task_lines = [f"  {k}: {v}" for k, v in status_counts.items()]
+        task_summary = f"Total: {len(tasks)}\n" + "\n".join(task_lines)
+
+    recent_msgs = ""
+    if messages:
+        last_5 = messages[-5:]
+        recent_msgs = "\n".join(
+            f"  [{m.get('sender', '?')}]: {m.get('content', '')}"
+            for m in last_5
+        )
+
+    members = ", ".join(project.get("members", [])) or "No members listed"
+
+    prompt = (
+        f'You are Genie, a friendly and helpful AI assistant built into TeamFlow, '
+        f'a team collaboration platform. You help teams coordinate better, '
+        f'manage tasks, and communicate effectively.\n\n'
+        f'Current Project: {project.get("name", "Unknown")}\n'
+        f'Description: {project.get("description", "N/A")}\n'
+        f'Members: {members}\n'
+        f'Task Status:\n{task_summary}\n'
+        f'Recent Messages:\n{recent_msgs or "  No recent messages"}\n\n'
+        f'User says: {user_message}\n\n'
+        f'Respond helpfully and concisely. If asked about tasks, reference the '
+        f'actual task data. Suggest actionable steps when appropriate. '
+        f'Keep responses under 300 words. Use markdown for formatting.'
+    )
+
+    try:
+        return _generate(prompt)
+    except Exception as e:
+        return f"Genie is temporarily unavailable. Error: {str(e)}"

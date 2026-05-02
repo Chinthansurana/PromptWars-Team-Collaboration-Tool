@@ -40,4 +40,5 @@ const API = {
   aiSuggest(projectId) { return this.request('POST', '/api/ai/suggest-tasks', { project_id: projectId }); },
   aiMeetingNotes(projectId) { return this.request('POST', '/api/ai/meeting-notes', { project_id: projectId }); },
   aiSentiment(projectId) { return this.request('POST', '/api/ai/sentiment', { project_id: projectId }); },
+  genieChat(projectId, message) { return this.request('POST', '/api/ai/genie', { project_id: projectId, message: message }); },
 };

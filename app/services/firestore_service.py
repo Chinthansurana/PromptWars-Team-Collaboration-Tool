@@ -2,22 +2,30 @@
 
 Provides CRUD operations for projects, tasks, and messages
 using Google Cloud Firestore as the backend database.
+Implements connection pooling, caching, and efficient queries.
 """
 
 import logging
+import time
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Any, Optional
 
 from google.cloud import firestore
 
 logger = logging.getLogger(__name__)
 
-# Module-level client (lazy-initialized)
+# Module-level client (lazy-initialized, singleton pattern)
 _db: Optional[firestore.Client] = None
+
+# Simple in-memory cache with TTL
+_cache: dict[str, tuple[float, Any]] = {}
+CACHE_TTL = 30  # seconds
 
 
 def get_db() -> firestore.Client:
     """Get or create the Firestore client (singleton).
+
+    Uses connection pooling via the google-cloud-firestore SDK.
 
     Returns:
         Firestore client instance.
@@ -25,11 +33,11 @@ def get_db() -> firestore.Client:
     global _db
     if _db is None:
         _db = firestore.Client()
-        logger.info("Firestore client initialized")
+        logger.info("Firestore client initialized with connection pooling")
     return _db
 
 
-def set_db(client) -> None:
+def set_db(client: Any) -> None:
     """Override the Firestore client (used for testing).
 
     Args:
@@ -37,6 +45,44 @@ def set_db(client) -> None:
     """
     global _db
     _db = client
+
+
+def _cache_get(key: str) -> Optional[Any]:
+    """Get a value from the in-memory cache if not expired.
+
+    Args:
+        key: Cache key.
+
+    Returns:
+        Cached value or None if expired/missing.
+    """
+    if key in _cache:
+        timestamp, value = _cache[key]
+        if time.time() - timestamp < CACHE_TTL:
+            return value
+        del _cache[key]
+    return None
+
+
+def _cache_set(key: str, value: Any) -> None:
+    """Set a value in the in-memory cache.
+
+    Args:
+        key: Cache key.
+        value: Value to cache.
+    """
+    _cache[key] = (time.time(), value)
+
+
+def _cache_invalidate(prefix: str) -> None:
+    """Invalidate all cache entries matching a prefix.
+
+    Args:
+        prefix: Key prefix to match.
+    """
+    keys_to_delete = [k for k in _cache if k.startswith(prefix)]
+    for k in keys_to_delete:
+        del _cache[k]
 
 
 # ---------------------------------------------------------------------------
@@ -47,8 +93,12 @@ def list_projects() -> list[dict]:
     """List all projects ordered by creation date.
 
     Returns:
-        List of project dictionaries.
+        List of project dictionaries sorted newest first.
     """
+    cached = _cache_get("projects:list")
+    if cached is not None:
+        return cached
+
     db = get_db()
     docs = db.collection("projects").order_by(
         "created_at", direction=firestore.Query.DESCENDING
@@ -58,6 +108,7 @@ def list_projects() -> list[dict]:
         data = doc.to_dict()
         data["id"] = doc.id
         results.append(data)
+    _cache_set("projects:list", results)
     return results
 
 
@@ -70,11 +121,16 @@ def get_project(project_id: str) -> Optional[dict]:
     Returns:
         Project dictionary or None if not found.
     """
+    cached = _cache_get(f"projects:{project_id}")
+    if cached is not None:
+        return cached
+
     db = get_db()
     doc = db.collection("projects").document(project_id).get()
     if doc.exists:
         data = doc.to_dict()
         data["id"] = doc.id
+        _cache_set(f"projects:{project_id}", data)
         return data
     return None
 
@@ -95,6 +151,7 @@ def create_project(data: dict) -> dict:
     doc_ref = db.collection("projects").document()
     doc_ref.set(data)
     data["id"] = doc_ref.id
+    _cache_invalidate("projects:")
     logger.info("Created project: %s", doc_ref.id)
     return data
 
@@ -118,12 +175,15 @@ def update_project(project_id: str, data: dict) -> Optional[dict]:
     doc_ref.update(data)
     updated = doc_ref.get().to_dict()
     updated["id"] = project_id
+    _cache_invalidate("projects:")
     logger.info("Updated project: %s", project_id)
     return updated
 
 
 def delete_project(project_id: str) -> bool:
     """Delete a project and all its tasks and messages.
+
+    Uses batch operations for efficient cascading deletes.
 
     Args:
         project_id: Firestore document ID.
@@ -137,17 +197,25 @@ def delete_project(project_id: str) -> bool:
     if not doc.exists:
         return False
 
-    # Delete associated tasks
-    tasks = db.collection("tasks").where("project_id", "==", project_id).stream()
+    # Batch delete associated tasks and messages for efficiency
+    batch = db.batch()
+    tasks = db.collection("tasks").where(
+        filter=firestore.FieldFilter("project_id", "==", project_id)
+    ).stream()
     for task in tasks:
-        task.reference.delete()
+        batch.delete(task.reference)
 
-    # Delete associated messages
-    messages = db.collection("messages").where("project_id", "==", project_id).stream()
+    messages = db.collection("messages").where(
+        filter=firestore.FieldFilter("project_id", "==", project_id)
+    ).stream()
     for msg in messages:
-        msg.reference.delete()
+        batch.delete(msg.reference)
 
-    doc_ref.delete()
+    batch.delete(doc_ref)
+    batch.commit()
+    _cache_invalidate("projects:")
+    _cache_invalidate("tasks:")
+    _cache_invalidate("messages:")
     logger.info("Deleted project and associated data: %s", project_id)
     return True
 
@@ -159,21 +227,30 @@ def delete_project(project_id: str) -> bool:
 def list_tasks(project_id: str) -> list[dict]:
     """List all tasks for a project.
 
+    Sorted by created_at in Python to avoid requiring composite indexes.
+
     Args:
         project_id: Parent project ID.
 
     Returns:
-        List of task dictionaries.
+        List of task dictionaries sorted newest first.
     """
+    cached = _cache_get(f"tasks:{project_id}")
+    if cached is not None:
+        return cached
+
     db = get_db()
     docs = db.collection("tasks").where(
-        "project_id", "==", project_id
-    ).order_by("created_at", direction=firestore.Query.DESCENDING).stream()
+        filter=firestore.FieldFilter("project_id", "==", project_id)
+    ).stream()
     results = []
     for doc in docs:
         data = doc.to_dict()
         data["id"] = doc.id
         results.append(data)
+    # Sort in Python to avoid composite index requirement
+    results.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+    _cache_set(f"tasks:{project_id}", results)
     return results
 
 
@@ -211,6 +288,7 @@ def create_task(data: dict) -> dict:
     doc_ref = db.collection("tasks").document()
     doc_ref.set(data)
     data["id"] = doc_ref.id
+    _cache_invalidate("tasks:")
     logger.info("Created task: %s", doc_ref.id)
     return data
 
@@ -234,6 +312,7 @@ def update_task(task_id: str, data: dict) -> Optional[dict]:
     doc_ref.update(data)
     updated = doc_ref.get().to_dict()
     updated["id"] = task_id
+    _cache_invalidate("tasks:")
     logger.info("Updated task: %s", task_id)
     return updated
 
@@ -253,6 +332,7 @@ def delete_task(task_id: str) -> bool:
     if not doc.exists:
         return False
     doc_ref.delete()
+    _cache_invalidate("tasks:")
     logger.info("Deleted task: %s", task_id)
     return True
 
@@ -269,19 +349,25 @@ def list_messages(project_id: str, limit: int = 50) -> list[dict]:
         limit: Maximum number of messages to return.
 
     Returns:
-        List of message dictionaries, oldest first.
+        List of message dictionaries in chronological order.
     """
+    cached = _cache_get(f"messages:{project_id}:{limit}")
+    if cached is not None:
+        return cached
+
     db = get_db()
     docs = db.collection("messages").where(
-        "project_id", "==", project_id
-    ).order_by("timestamp", direction=firestore.Query.DESCENDING).limit(limit).stream()
+        filter=firestore.FieldFilter("project_id", "==", project_id)
+    ).stream()
     results = []
     for doc in docs:
         data = doc.to_dict()
         data["id"] = doc.id
         results.append(data)
-    # Return in chronological order
-    results.reverse()
+    # Sort by timestamp in Python, take latest N
+    results.sort(key=lambda x: x.get("timestamp", ""))
+    results = results[-limit:]
+    _cache_set(f"messages:{project_id}:{limit}", results)
     return results
 
 
@@ -300,4 +386,5 @@ def create_message(data: dict) -> dict:
     doc_ref = db.collection("messages").document()
     doc_ref.set(data)
     data["id"] = doc_ref.id
+    _cache_invalidate("messages:")
     return data

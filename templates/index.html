@@ -1,255 +1,285 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description"
-        content="TeamFlow — AI-powered team collaboration platform that simplifies workflows and improves task visibility.">
+        content="TeamFlow — AI-powered team collaboration platform. Simplify workflows, improve task visibility, and enhance team coordination with Kanban boards, real-time chat, and Genie AI assistant powered by Google Gemini.">
+    <meta name="keywords"
+        content="team collaboration, task management, kanban board, AI assistant, Google Cloud, workflow automation">
+    <meta name="author" content="TeamFlow">
     <meta name="theme-color" content="#0a0a1a">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="TeamFlow — AI-Powered Team Collaboration">
+    <meta property="og:description"
+        content="Simplify workflows, improve task visibility, and enhance team coordination.">
+    <meta property="og:type" content="website">
     <title>TeamFlow — AI-Powered Team Collaboration</title>
-
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
-
-    <!-- Favicon -->
     <link rel="icon" href="/static/images/favicon.svg" type="image/svg+xml">
-
-    <!-- Styles -->
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 
 <body>
-    <!-- Skip to main content for accessibility -->
     <a href="#main-content" class="skip-link" id="skip-nav">Skip to main content</a>
 
-    <!-- App Shell -->
-    <div class="app-container" id="app-container">
-
-        <!-- Sidebar -->
+    <div class="app-container" id="app-container" role="application" aria-label="TeamFlow Application">
+        <!-- Sidebar Navigation -->
         <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
             <div class="sidebar-header">
-                <div class="logo" id="logo">
+                <div class="logo" id="logo" role="banner">
                     <span class="logo-icon" aria-hidden="true">⚡</span>
                     <span class="logo-text">TeamFlow</span>
                 </div>
-                <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar" title="Toggle sidebar">
+                <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar navigation"
+                    aria-expanded="true" aria-controls="sidebar">
                     <span class="hamburger" aria-hidden="true"></span>
                 </button>
             </div>
-
-            <nav class="sidebar-nav">
-                <button class="nav-item active" id="nav-dashboard" data-view="dashboard" aria-label="Dashboard"
-                    title="Dashboard">
+            <nav class="sidebar-nav" aria-label="Primary navigation">
+                <button class="nav-item active" id="nav-dashboard" data-view="dashboard" role="tab" aria-selected="true"
+                    aria-controls="view-dashboard" aria-label="Dashboard — view project overview">
                     <span class="nav-icon" aria-hidden="true">📊</span>
                     <span class="nav-label">Dashboard</span>
                 </button>
-                <button class="nav-item" id="nav-projects" data-view="projects" aria-label="Projects" title="Projects">
+                <button class="nav-item" id="nav-projects" data-view="projects" role="tab" aria-selected="false"
+                    aria-controls="view-projects" aria-label="Projects — manage team projects">
                     <span class="nav-icon" aria-hidden="true">📁</span>
                     <span class="nav-label">Projects</span>
                 </button>
-                <button class="nav-item" id="nav-board" data-view="board" aria-label="Kanban Board"
-                    title="Kanban Board">
+                <button class="nav-item" id="nav-board" data-view="board" role="tab" aria-selected="false"
+                    aria-controls="view-board" aria-label="Kanban Board — manage task workflow">
                     <span class="nav-icon" aria-hidden="true">📋</span>
                     <span class="nav-label">Board</span>
                 </button>
-                <button class="nav-item" id="nav-chat" data-view="chat" aria-label="Team Chat" title="Team Chat">
+                <button class="nav-item" id="nav-chat" data-view="chat" role="tab" aria-selected="false"
+                    aria-controls="view-chat" aria-label="Team Chat — communicate with your team">
                     <span class="nav-icon" aria-hidden="true">💬</span>
                     <span class="nav-label">Chat</span>
                 </button>
-                <button class="nav-item" id="nav-ai" data-view="ai" aria-label="AI Assistant" title="AI Assistant">
+                <button class="nav-item" id="nav-ai" data-view="ai" role="tab" aria-selected="false"
+                    aria-controls="view-ai" aria-label="AI Tools — access AI-powered features">
                     <span class="nav-icon" aria-hidden="true">🤖</span>
-                    <span class="nav-label">AI Assistant</span>
+                    <span class="nav-label">AI Tools</span>
                 </button>
             </nav>
-
+            <div class="sidebar-divider"></div>
+            <button class="nav-item" id="theme-toggle" aria-label="Toggle theme"
+                title="Switch between light, dark, and system theme">
+                <span class="nav-icon" aria-hidden="true">🌙</span>
+                <span class="nav-label">Dark Mode</span>
+            </button>
             <div class="sidebar-footer">
-                <div class="user-info" id="user-info">
-                    <div class="user-avatar" aria-hidden="true">CS</div>
+                <div class="user-info" id="user-info" role="status" aria-label="Current user information">
+                    <div class="user-avatar" aria-hidden="true">TM</div>
                     <div class="user-details">
                         <span class="user-name" id="user-name">Team Member</span>
-                        <span class="user-status" id="user-status">Online</span>
+                        <span class="user-status" id="user-status" aria-label="Status: Online">● Online</span>
                     </div>
                 </div>
             </div>
         </aside>
 
-        <!-- Main Content -->
-        <main class="main-content" id="main-content" role="main" tabindex="-1">
-
-            <!-- Header -->
-            <header class="content-header" id="content-header">
+        <!-- Main Content Area -->
+        <main class="main-content" id="main-content" role="main" tabindex="-1" aria-label="Main content area">
+            <header class="content-header" id="content-header" role="banner">
                 <div class="header-left">
                     <h1 class="page-title" id="page-title">Dashboard</h1>
-                    <p class="page-subtitle" id="page-subtitle">Overview of your team's activity</p>
+                    <p class="page-subtitle" id="page-subtitle">Overview of your team's coordination and workflow</p>
                 </div>
                 <div class="header-actions" id="header-actions">
-                    <button class="btn btn-primary" id="btn-new-project" aria-label="Create new project">
+                    <button class="btn btn-primary" id="btn-new-project" aria-label="Create a new team project">
                         <span aria-hidden="true">+</span> New Project
                     </button>
                 </div>
             </header>
 
-            <!-- Content Area -->
             <div class="content-area" id="content-area">
-
                 <!-- Dashboard View -->
-                <section class="view active" id="view-dashboard" aria-label="Dashboard view">
-                    <div class="stats-grid" id="stats-grid">
-                        <div class="stat-card" id="stat-projects">
+                <section class="view active" id="view-dashboard" role="tabpanel" aria-labelledby="nav-dashboard"
+                    aria-label="Dashboard view showing team activity overview">
+                    <div class="stats-grid" id="stats-grid" role="region" aria-label="Project statistics">
+                        <div class="stat-card" id="stat-projects" role="status" aria-label="Total projects count">
                             <div class="stat-icon" aria-hidden="true">📁</div>
                             <div class="stat-info">
-                                <span class="stat-value" id="stat-projects-count">0</span>
+                                <span class="stat-value" id="stat-projects-count" aria-live="polite">0</span>
                                 <span class="stat-label">Projects</span>
                             </div>
                         </div>
-                        <div class="stat-card" id="stat-tasks-total">
+                        <div class="stat-card" id="stat-tasks-total" role="status" aria-label="Total tasks count">
                             <div class="stat-icon" aria-hidden="true">📋</div>
                             <div class="stat-info">
-                                <span class="stat-value" id="stat-tasks-count">0</span>
+                                <span class="stat-value" id="stat-tasks-count" aria-live="polite">0</span>
                                 <span class="stat-label">Total Tasks</span>
                             </div>
                         </div>
-                        <div class="stat-card" id="stat-tasks-done">
+                        <div class="stat-card" id="stat-tasks-done" role="status" aria-label="Completed tasks count">
                             <div class="stat-icon" aria-hidden="true">✅</div>
                             <div class="stat-info">
-                                <span class="stat-value" id="stat-done-count">0</span>
+                                <span class="stat-value" id="stat-done-count" aria-live="polite">0</span>
                                 <span class="stat-label">Completed</span>
                             </div>
                         </div>
-                        <div class="stat-card" id="stat-tasks-progress">
+                        <div class="stat-card" id="stat-tasks-progress" role="status"
+                            aria-label="In progress tasks count">
                             <div class="stat-icon" aria-hidden="true">🔄</div>
                             <div class="stat-info">
-                                <span class="stat-value" id="stat-progress-count">0</span>
+                                <span class="stat-value" id="stat-progress-count" aria-live="polite">0</span>
                                 <span class="stat-label">In Progress</span>
                             </div>
                         </div>
                     </div>
-
-                    <div class="dashboard-grid">
+                    <div class="dashboard-grid" role="region" aria-label="Recent activity">
                         <div class="dashboard-card" id="recent-projects-card">
                             <h2 class="card-title">Recent Projects</h2>
-                            <div class="card-content" id="recent-projects-list">
-                                <p class="empty-state">Loading projects...</p>
+                            <div class="card-content" id="recent-projects-list" role="list"
+                                aria-label="Recent projects list">
+                                <p class="empty-state" role="status">Loading projects...</p>
                             </div>
                         </div>
                         <div class="dashboard-card" id="recent-tasks-card">
                             <h2 class="card-title">Recent Tasks</h2>
-                            <div class="card-content" id="recent-tasks-list">
-                                <p class="empty-state">Loading tasks...</p>
+                            <div class="card-content" id="recent-tasks-list" role="list" aria-label="Recent tasks list">
+                                <p class="empty-state" role="status">Loading tasks...</p>
                             </div>
                         </div>
                     </div>
                 </section>
 
                 <!-- Projects View -->
-                <section class="view" id="view-projects" aria-label="Projects view">
-                    <div class="projects-grid" id="projects-grid">
-                        <p class="empty-state">Loading projects...</p>
+                <section class="view" id="view-projects" role="tabpanel" aria-labelledby="nav-projects"
+                    aria-label="Projects management view">
+                    <div class="projects-grid" id="projects-grid" role="list" aria-label="All projects">
+                        <p class="empty-state" role="status">Loading projects...</p>
                     </div>
                 </section>
 
                 <!-- Kanban Board View -->
-                <section class="view" id="view-board" aria-label="Kanban board view">
-                    <div class="board-header" id="board-header">
-                        <select class="project-select" id="board-project-select" aria-label="Select project for board">
+                <section class="view" id="view-board" role="tabpanel" aria-labelledby="nav-board"
+                    aria-label="Kanban board for task workflow management">
+                    <div class="board-header" id="board-header" role="toolbar" aria-label="Board controls">
+                        <label for="board-project-select" class="sr-only">Select project for board</label>
+                        <select class="project-select" id="board-project-select"
+                            aria-label="Select project to view on board">
                             <option value="">Select a project</option>
                         </select>
-                        <button class="btn btn-secondary" id="btn-new-task" aria-label="Create new task" disabled>
+                        <button class="btn btn-secondary" id="btn-new-task"
+                            aria-label="Create a new task in selected project" disabled>
                             <span aria-hidden="true">+</span> New Task
                         </button>
                     </div>
-                    <div class="kanban-board" id="kanban-board" role="region" aria-label="Kanban board columns">
-                        <div class="kanban-column" id="col-todo" data-status="todo">
+                    <div class="kanban-board" id="kanban-board" role="region"
+                        aria-label="Task columns organized by workflow status">
+                        <div class="kanban-column" id="col-todo" data-status="todo" role="group"
+                            aria-label="To Do column">
                             <div class="column-header">
-                                <h3 class="column-title">📌 To Do</h3>
-                                <span class="column-count" id="count-todo">0</span>
+                                <h3 class="column-title" id="col-todo-title">📌 To Do</h3>
+                                <span class="column-count" id="count-todo" aria-label="To do task count">0</span>
                             </div>
-                            <div class="column-tasks" id="tasks-todo" role="list" aria-label="To do tasks"></div>
+                            <div class="column-tasks" id="tasks-todo" role="list" aria-labelledby="col-todo-title"
+                                aria-label="To do tasks"></div>
                         </div>
-                        <div class="kanban-column" id="col-in-progress" data-status="in_progress">
+                        <div class="kanban-column" id="col-in-progress" data-status="in_progress" role="group"
+                            aria-label="In Progress column">
                             <div class="column-header">
-                                <h3 class="column-title">🔄 In Progress</h3>
-                                <span class="column-count" id="count-in-progress">0</span>
+                                <h3 class="column-title" id="col-progress-title">🔄 In Progress</h3>
+                                <span class="column-count" id="count-in-progress"
+                                    aria-label="In progress task count">0</span>
                             </div>
-                            <div class="column-tasks" id="tasks-in-progress" role="list" aria-label="In progress tasks">
-                            </div>
+                            <div class="column-tasks" id="tasks-in-progress" role="list"
+                                aria-labelledby="col-progress-title" aria-label="In progress tasks"></div>
                         </div>
-                        <div class="kanban-column" id="col-review" data-status="review">
+                        <div class="kanban-column" id="col-review" data-status="review" role="group"
+                            aria-label="Review column">
                             <div class="column-header">
-                                <h3 class="column-title">🔍 Review</h3>
-                                <span class="column-count" id="count-review">0</span>
+                                <h3 class="column-title" id="col-review-title">🔍 Review</h3>
+                                <span class="column-count" id="count-review" aria-label="Review task count">0</span>
                             </div>
-                            <div class="column-tasks" id="tasks-review" role="list" aria-label="Review tasks"></div>
+                            <div class="column-tasks" id="tasks-review" role="list" aria-labelledby="col-review-title"
+                                aria-label="Review tasks"></div>
                         </div>
-                        <div class="kanban-column" id="col-done" data-status="done">
+                        <div class="kanban-column" id="col-done" data-status="done" role="group"
+                            aria-label="Done column">
                             <div class="column-header">
-                                <h3 class="column-title">✅ Done</h3>
-                                <span class="column-count" id="count-done">0</span>
+                                <h3 class="column-title" id="col-done-title">✅ Done</h3>
+                                <span class="column-count" id="count-done" aria-label="Done task count">0</span>
                             </div>
-                            <div class="column-tasks" id="tasks-done" role="list" aria-label="Done tasks"></div>
+                            <div class="column-tasks" id="tasks-done" role="list" aria-labelledby="col-done-title"
+                                aria-label="Done tasks"></div>
                         </div>
                     </div>
                 </section>
 
                 <!-- Chat View -->
-                <section class="view" id="view-chat" aria-label="Team chat view">
+                <section class="view" id="view-chat" role="tabpanel" aria-labelledby="nav-chat"
+                    aria-label="Team communication chat view">
                     <div class="chat-container" id="chat-container">
                         <div class="chat-header" id="chat-header">
+                            <label for="chat-project-select" class="sr-only">Select project for chat</label>
                             <select class="project-select" id="chat-project-select"
-                                aria-label="Select project for chat">
+                                aria-label="Select project chat channel">
                                 <option value="">Select a project</option>
                             </select>
                         </div>
-                        <div class="chat-messages" id="chat-messages" role="log" aria-label="Chat messages"
-                            aria-live="polite">
-                            <p class="empty-state">Select a project to start chatting</p>
+                        <div class="chat-messages" id="chat-messages" role="log" aria-label="Chat message history"
+                            aria-live="polite" aria-relevant="additions">
+                            <p class="empty-state" role="status">Select a project to start chatting</p>
                         </div>
-                        <div class="chat-input-area" id="chat-input-area">
+                        <form class="chat-input-area" id="chat-input-area" role="form" aria-label="Send a message"
+                            onsubmit="return false;">
+                            <label for="chat-input" class="sr-only">Type a chat message</label>
                             <input type="text" class="chat-input" id="chat-input" placeholder="Type a message..."
-                                aria-label="Chat message input" disabled>
-                            <button class="btn btn-primary chat-send" id="btn-send-message" aria-label="Send message"
-                                disabled>Send</button>
-                        </div>
+                                aria-label="Chat message input" autocomplete="off" disabled>
+                            <button class="btn btn-primary chat-send" id="btn-send-message" type="submit"
+                                aria-label="Send chat message" disabled>Send</button>
+                        </form>
                     </div>
                 </section>
 
-                <!-- AI Assistant View -->
-                <section class="view" id="view-ai" aria-label="AI Assistant view">
+                <!-- AI Tools View -->
+                <section class="view" id="view-ai" role="tabpanel" aria-labelledby="nav-ai"
+                    aria-label="AI-powered collaboration tools">
                     <div class="ai-container" id="ai-container">
                         <div class="ai-header">
+                            <label for="ai-project-select" class="sr-only">Select project for AI tools</label>
                             <select class="project-select" id="ai-project-select"
-                                aria-label="Select project for AI features">
+                                aria-label="Select project for AI analysis">
                                 <option value="">Select a project</option>
                             </select>
                         </div>
-                        <div class="ai-features-grid" id="ai-features-grid">
-                            <div class="ai-feature-card" id="ai-summarize-card">
+                        <div class="ai-features-grid" id="ai-features-grid" role="region"
+                            aria-label="Available AI features">
+                            <div class="ai-feature-card" id="ai-summarize-card" role="article"
+                                aria-label="Task Summary feature">
                                 <div class="ai-feature-icon" aria-hidden="true">📊</div>
                                 <h3 class="ai-feature-title">Task Summary</h3>
                                 <p class="ai-feature-desc">Get an AI-generated overview of all tasks and project status
                                 </p>
                                 <button class="btn btn-ai" id="btn-ai-summarize" disabled
-                                    aria-label="Generate task summary">Generate Summary</button>
+                                    aria-label="Generate AI task summary">Generate Summary</button>
                             </div>
-                            <div class="ai-feature-card" id="ai-suggest-card">
+                            <div class="ai-feature-card" id="ai-suggest-card" role="article"
+                                aria-label="Smart Suggestions feature">
                                 <div class="ai-feature-icon" aria-hidden="true">💡</div>
                                 <h3 class="ai-feature-title">Smart Suggestions</h3>
                                 <p class="ai-feature-desc">Let AI suggest tasks based on your project description</p>
                                 <button class="btn btn-ai" id="btn-ai-suggest" disabled
-                                    aria-label="Generate task suggestions">Get Suggestions</button>
+                                    aria-label="Get AI task suggestions">Get Suggestions</button>
                             </div>
-                            <div class="ai-feature-card" id="ai-meeting-card">
+                            <div class="ai-feature-card" id="ai-meeting-card" role="article"
+                                aria-label="Meeting Notes feature">
                                 <div class="ai-feature-icon" aria-hidden="true">📝</div>
                                 <h3 class="ai-feature-title">Meeting Notes</h3>
                                 <p class="ai-feature-desc">Generate structured meeting notes from team conversations</p>
                                 <button class="btn btn-ai" id="btn-ai-meeting" disabled
-                                    aria-label="Generate meeting notes">Generate Notes</button>
+                                    aria-label="Generate AI meeting notes">Generate Notes</button>
                             </div>
-                            <div class="ai-feature-card" id="ai-sentiment-card">
+                            <div class="ai-feature-card" id="ai-sentiment-card" role="article"
+                                aria-label="Team Sentiment feature">
                                 <div class="ai-feature-icon" aria-hidden="true">😊</div>
                                 <h3 class="ai-feature-title">Team Sentiment</h3>
                                 <p class="ai-feature-desc">Analyze team morale and communication patterns</p>
@@ -257,35 +287,81 @@
                                     aria-label="Analyze team sentiment">Analyze Sentiment</button>
                             </div>
                         </div>
-                        <div class="ai-result-panel" id="ai-result-panel" role="region" aria-label="AI response"
+                        <div class="ai-result-panel" id="ai-result-panel" role="region" aria-label="AI analysis results"
                             aria-live="polite">
                             <div class="ai-result-content" id="ai-result-content">
-                                <p class="empty-state">Select a project and click an AI feature to get started</p>
+                                <p class="empty-state" role="status">Select a project and click an AI feature to get
+                                    started</p>
                             </div>
                         </div>
                     </div>
                 </section>
-
             </div>
         </main>
     </div>
 
+    <!-- Genie AI Chatbot Floating Widget -->
+    <div class="genie-fab" id="genie-fab" role="complementary" aria-label="Genie AI Assistant">
+        <button class="genie-toggle" id="genie-toggle" aria-label="Open Genie AI assistant" aria-expanded="false"
+            aria-controls="genie-panel" title="Chat with Genie AI">
+            <span class="genie-icon" aria-hidden="true">🧞</span>
+        </button>
+        <div class="genie-panel" id="genie-panel" role="dialog" aria-label="Genie AI Chat" aria-hidden="true">
+            <div class="genie-header">
+                <h2 class="genie-title">🧞 Genie AI</h2>
+                <span class="genie-subtitle">Your team collaboration assistant</span>
+                <button class="genie-close" id="genie-close" aria-label="Close Genie chat">&times;</button>
+            </div>
+            <div class="genie-messages" id="genie-messages" role="log" aria-label="Genie conversation"
+                aria-live="polite">
+                <div class="chat-message ai-msg">
+                    <span class="msg-sender">🧞 Genie</span>
+                    <span class="msg-content">Hi! I'm Genie, your AI team assistant. I can help with task coordination,
+                        workflow advice, and team communication. How can I help?</span>
+                </div>
+            </div>
+            <form class="genie-input-area" id="genie-input-form" role="form" aria-label="Ask Genie a question"
+                onsubmit="return false;">
+                <label for="genie-input" class="sr-only">Type a message to Genie</label>
+                <input type="text" class="chat-input" id="genie-input" placeholder="Ask Genie anything..."
+                    aria-label="Message to Genie AI" autocomplete="off">
+                <button class="btn btn-ai genie-send" id="btn-genie-send" type="submit"
+                    aria-label="Send message to Genie">Ask</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal Overlay -->
-    <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true"
+        aria-label="Dialog window">
         <div class="modal" id="modal">
             <div class="modal-header">
                 <h2 class="modal-title" id="modal-title">Modal</h2>
-                <button class="modal-close" id="modal-close" aria-label="Close modal">&times;</button>
+                <button class="modal-close" id="modal-close" aria-label="Close dialog">&times;</button>
             </div>
             <div class="modal-body" id="modal-body"></div>
             <div class="modal-footer" id="modal-footer"></div>
         </div>
     </div>
 
-    <!-- Toast Container -->
-    <div class="toast-container" id="toast-container" aria-live="assertive" aria-atomic="true"></div>
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container" role="alert" aria-live="assertive" aria-atomic="true"></div>
 
-    <!-- Scripts -->
+    <!-- Screen reader only styles -->
+    <style>
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0
+        }
+    </style>
+
     <script src="/static/js/api.js"></script>
     <script src="/static/js/components.js"></script>
     <script src="/static/js/ai.js"></script>

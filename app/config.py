@@ -18,7 +18,7 @@ class BaseConfig:
     # Google Cloud
     GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "")
     GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-    GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
+    GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
 
     # Firestore
     FIRESTORE_DATABASE = os.environ.get("FIRESTORE_DATABASE", "(default)")

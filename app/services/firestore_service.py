@@ -301,3 +301,138 @@ def create_message(data: dict) -> dict:
     doc_ref.set(data)
     data["id"] = doc_ref.id
     return data
+
+
+# ---------------------------------------------------------------------------
+# Users
+# ---------------------------------------------------------------------------
+
+def list_users() -> list[dict]:
+    """List all users ordered by creation date.
+
+    Returns:
+        List of user dictionaries sorted newest first.
+    """
+    cached = _cache_get("users:list")
+    if cached is not None:
+        return cached
+
+    db = get_db()
+    docs = db.collection("users").order_by(
+        "created_at", direction=firestore.Query.DESCENDING
+    ).stream()
+    results = []
+    for doc in docs:
+        data = doc.to_dict()
+        data["id"] = doc.id
+        results.append(data)
+    _cache_set("users:list", results)
+    return results
+
+
+def get_user(user_id: str) -> Optional[dict]:
+    """Get a single user by ID.
+
+    Args:
+        user_id: Firestore document ID.
+
+    Returns:
+        User dictionary or None if not found.
+    """
+    cached = _cache_get(f"users:{user_id}")
+    if cached is not None:
+        return cached
+
+    db = get_db()
+    doc = db.collection("users").document(user_id).get()
+    if doc.exists:
+        data = doc.to_dict()
+        data["id"] = doc.id
+        _cache_set(f"users:{user_id}", data)
+        return data
+    return None
+
+
+def get_user_by_email(email: str) -> Optional[dict]:
+    """Get a user by email address.
+
+    Args:
+        email: User email address.
+
+    Returns:
+        User dictionary or None if not found.
+    """
+    db = get_db()
+    docs = db.collection("users").where(
+        filter=firestore.FieldFilter("email", "==", email)
+    ).stream()
+    for doc in docs:
+        data = doc.to_dict()
+        data["id"] = doc.id
+        return data
+    return None
+
+
+def create_user(data: dict) -> dict:
+    """Create a new user.
+
+    Args:
+        data: User data dictionary.
+
+    Returns:
+        Created user dictionary with generated ID.
+    """
+    db = get_db()
+    now = datetime.now(timezone.utc).isoformat()
+    data["created_at"] = now
+    data["updated_at"] = now
+    doc_ref = db.collection("users").document()
+    doc_ref.set(data)
+    data["id"] = doc_ref.id
+    _cache_invalidate("users:")
+    logger.info("Created user: %s", doc_ref.id)
+    return data
+
+
+def update_user(user_id: str, data: dict) -> Optional[dict]:
+    """Update an existing user.
+
+    Args:
+        user_id: Firestore document ID.
+        data: Fields to update.
+
+    Returns:
+        Updated user dictionary or None if not found.
+    """
+    db = get_db()
+    doc_ref = db.collection("users").document(user_id)
+    doc = doc_ref.get()
+    if not doc.exists:
+        return None
+    data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    doc_ref.update(data)
+    updated = doc_ref.get().to_dict()
+    updated["id"] = user_id
+    _cache_invalidate("users:")
+    logger.info("Updated user: %s", user_id)
+    return updated
+
+
+def delete_user(user_id: str) -> bool:
+    """Delete a user.
+
+    Args:
+        user_id: Firestore document ID.
+
+    Returns:
+        True if deleted, False if not found.
+    """
+    db = get_db()
+    doc_ref = db.collection("users").document(user_id)
+    doc = doc_ref.get()
+    if not doc.exists:
+        return False
+    doc_ref.delete()
+    _cache_invalidate("users:")
+    logger.info("Deleted user: %s", user_id)
+    return True

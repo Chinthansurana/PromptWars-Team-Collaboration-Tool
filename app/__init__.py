@@ -88,10 +88,12 @@ def _register_blueprints(app: Flask) -> None:
     from app.routes.messages import messages_bp
     from app.routes.projects import projects_bp
     from app.routes.tasks import tasks_bp
+    from app.routes.users import users_bp
     from app.routes.views import views_bp
 
     app.register_blueprint(projects_bp, url_prefix="/api")
     app.register_blueprint(tasks_bp, url_prefix="/api")
     app.register_blueprint(messages_bp, url_prefix="/api")
+    app.register_blueprint(users_bp, url_prefix="/api")
     app.register_blueprint(ai_bp, url_prefix="/api/ai")
     app.register_blueprint(views_bp)

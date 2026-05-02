@@ -16,6 +16,7 @@ MAX_MESSAGE_LENGTH = 2000
 MAX_TAG_LENGTH = 50
 MAX_TAGS_COUNT = 20
 MAX_MEMBERS_COUNT = 50
+MAX_EMAIL_LENGTH = 255
 
 
 def sanitize_string(value: str, max_length: int = MAX_NAME_LENGTH) -> str:
@@ -137,6 +138,16 @@ def validate_task_data(data: dict, project_id: str = "") -> tuple[Optional[dict]
     else:
         validated["tags"] = []
 
+    # Validate assignee is a project member (if assignee is provided and project_id exists)
+    if validated["assignee"] and project_id:
+        from app.services import firestore_service
+        project = firestore_service.get_project(project_id)
+        if project:
+            project_members = project.get("members", [])
+            # Allow empty assignee (unassigned) or assignee must be in project members
+            if validated["assignee"] not in project_members:
+                return None, "Assignee must be a member of this project"
+
     return validated, None
 
 
@@ -170,5 +181,45 @@ def validate_message_data(data: dict, project_id: str = "") -> tuple[Optional[di
     from app.models.message import VALID_TYPES
     if validated["msg_type"] not in VALID_TYPES:
         return None, f"Invalid message type. Must be one of: {', '.join(VALID_TYPES)}"
+
+    return validated, None
+
+
+def validate_user_data(data: dict, is_update: bool = False) -> tuple[Optional[dict], Optional[str]]:
+    """Validate user creation/update data.
+
+    Args:
+        data: Raw request data.
+        is_update: Whether this is an update operation (fields optional).
+
+    Returns:
+        Tuple of (validated_data, error_message).
+    """
+    if not data:
+        return None, "Request body is required"
+
+    name = data.get("name", "").strip()
+    email = data.get("email", "").strip().lower()
+
+    if not is_update:
+        if not name:
+            return None, "User name is required"
+        if not email:
+            return None, "User email is required"
+
+    # Validate email format
+    if email and not re.match(r"^[^@]+@[^@]+\.[^@]+$", email):
+        return None, "Invalid email format"
+
+    validated = {
+        "name": sanitize_string(name, MAX_NAME_LENGTH) if name else "",
+        "email": sanitize_string(email, MAX_EMAIL_LENGTH) if email else "",
+        "role": data.get("role", "member"),
+    }
+
+    # Validate role
+    from app.models.user import VALID_ROLES
+    if validated["role"] not in VALID_ROLES:
+        return None, f"Invalid role. Must be one of: {', '.join(VALID_ROLES)}"
 
     return validated, None

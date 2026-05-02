@@ -64,6 +64,11 @@
                     <span class="nav-icon" aria-hidden="true">🤖</span>
                     <span class="nav-label">AI Assistant</span>
                 </button>
+                <button class="nav-item" id="nav-users" data-view="users" role="tab" aria-selected="false"
+                    aria-controls="view-users" aria-label="Users — manage team members">
+                    <span class="nav-icon" aria-hidden="true">👥</span>
+                    <span class="nav-label">Users</span>
+                </button>
             </nav>
 
             <div class="sidebar-footer">
@@ -89,6 +94,9 @@
                 <div class="header-actions" id="header-actions">
                     <button class="btn btn-primary" id="btn-new-project" aria-label="Create new project">
                         <span aria-hidden="true">+</span> New Project
+                    </button>
+                    <button class="btn btn-primary" id="btn-new-user-header" aria-label="Create a new team member" style="display: none;">
+                        <span aria-hidden="true">+</span> New User
                     </button>
                 </div>
             </header>
@@ -266,6 +274,19 @@
                     </div>
                 </section>
 
+                <!-- Users View -->
+                <section class="view" id="view-users" role="tabpanel" aria-labelledby="nav-users"
+                    aria-label="User management view">
+                    <div class="users-header" id="users-header" role="toolbar" aria-label="User management controls">
+                        <button class="btn btn-primary" id="btn-new-user"
+                            aria-label="Create a new team member">
+                            <span aria-hidden="true">+</span> New User
+                        </button>
+                    </div>
+                    <div class="users-grid" id="users-grid" role="list" aria-label="All users">
+                        <p class="empty-state" role="status">Loading users...</p>
+                    </div>
+                </section>
             </div>
         </main>
     </div>

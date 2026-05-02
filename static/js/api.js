@@ -35,6 +35,13 @@ const API = {
   listMessages(projectId, limit = 50) { return this.request('GET', `/api/projects/${projectId}/messages?limit=${limit}`); },
   sendMessage(projectId, data) { return this.request('POST', `/api/projects/${projectId}/messages`, data); },
 
+  // Users
+  listUsers() { return this.request('GET', '/api/users'); },
+  getUser(id) { return this.request('GET', `/api/users/${id}`); },
+  createUser(data) { return this.request('POST', '/api/users', data); },
+  updateUser(id, data) { return this.request('PUT', `/api/users/${id}`, data); },
+  deleteUser(id) { return this.request('DELETE', `/api/users/${id}`); },
+
   // AI
   aiSummarize(projectId) { return this.request('POST', '/api/ai/summarize', { project_id: projectId }); },
   aiSuggest(projectId) { return this.request('POST', '/api/ai/suggest-tasks', { project_id: projectId }); },
